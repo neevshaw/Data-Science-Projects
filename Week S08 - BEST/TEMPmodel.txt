@@ -1,0 +1,65 @@
+
+model {
+  for ( s in 1:nSubj ) {
+    nCorrOfSubj[s] ~ dbin( theta[s] , nTrlOfSubj[s] )
+    theta[s] ~ dbeta( aBeta[CondOfSubj[s]] , bBeta[CondOfSubj[s]] ) 
+  }
+
+#   for ( j in 1:nCond ) {
+#     # Use omega[j] for model index 1, omega0 for model index 2:
+#     aBeta[j] <-       ( equals(mdlIdx,1)*omega[j] 
+#                       + equals(mdlIdx,2)*omega0  )   * (kappa[j]-2)+1
+#     bBeta[j] <- ( 1 - ( equals(mdlIdx,1)*omega[j] 
+#                       + equals(mdlIdx,2)*omega0  ) ) * (kappa[j]-2)+1
+#   }
+#   for ( j in 1:2 ) {
+#     omega[j] ~ dbeta( a[j,mdlIdx] , b[j,mdlIdx] )
+#   }
+#   omega[3] <- omega[2]
+#   omega[4] <- omega[2]
+
+  for ( j in 1:nCond ) {
+    # Use omega[j] for model index 1, omega0 for model index 2:
+    aBeta[j] <-       ( equals(mdlIdx,1)*omega[j] 
+                      + equals(mdlIdx,2)*omega0  )   * (kappa[j]-2)+1
+    bBeta[j] <- ( 1 - ( equals(mdlIdx,1)*omega[j] 
+                      + equals(mdlIdx,2)*omega0  ) ) * (kappa[j]-2)+1
+    omega[j] ~ dbeta( a[j,mdlIdx] , b[j,mdlIdx] )
+  }
+
+  omega0 ~ dbeta( a0[mdlIdx] , b0[mdlIdx] )
+  for ( j in 1:nCond ) {
+    kappa[j] <- kappaMinusTwo[j] + 2
+    kappaMinusTwo[j] ~ dgamma( 2.618 , 0.0809 ) # mode 20 , sd 20
+  }
+  # Constants for prior and pseudoprior:
+  aP <- 1
+  bP <- 1
+  # a0[model] and b0[model]
+  a0[1] <- .48*500       # pseudo
+  b0[1] <- (1-.48)*500   # pseudo 
+  a0[2] <- aP            # true
+  b0[2] <- bP            # true
+  # a[condition,model] and b[condition,model]
+  a[1,1] <- aP           # true
+  a[2,1] <- aP           # true
+  a[3,1] <- aP           # true
+  a[4,1] <- aP           # true
+  b[1,1] <- bP           # true
+  b[2,1] <- bP           # true
+  b[3,1] <- bP           # true
+  b[4,1] <- bP           # true
+  a[1,2] <- .40*125      # pseudo
+  a[2,2] <- .50*125      # pseudo
+  a[3,2] <- .51*125      # pseudo
+  a[4,2] <- .52*125      # pseudo
+  b[1,2] <- (1-.40)*125  # pseudo
+  b[2,2] <- (1-.50)*125  # pseudo
+  b[3,2] <- (1-.51)*125  # pseudo
+  b[4,2] <- (1-.52)*125  # pseudo
+  # Prior on model index:
+  mdlIdx ~ dcat( modelProb[] )
+  modelProb[1] <- .5
+  modelProb[2] <- .5
+}
+
